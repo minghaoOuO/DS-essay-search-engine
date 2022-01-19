@@ -184,13 +184,11 @@ int main(int argc, char *argv[])
         struct stat buf;
         if (stat(data_path.c_str(), &buf) == -1) break;
         file_index++;
-        
         if (file_index == 1000) {
             count++;
-            if (count == 10) break;
+            if (count == 50) break;
             file_index = 0;
         }
-        
         essay e;
         // get title name
         fi.open(data_path, ios::in);
@@ -219,12 +217,15 @@ int main(int argc, char *argv[])
         fi.close();
     }
 
-    //cout << Essay_vector.size() << endl;
+    clock_t end = clock();
+    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
+    std::cout << "implement :  " << seconds << " seconds\n";
 
     // read query
     fi.open(query, ios::in);
     ofstream ansfile;
     ansfile.open (output);
+    int query_cnt = 0;
     while (getline(fi, tmp)) {
         vector<string> content = split(tmp, " ");
         stack<string> query_stack;
@@ -264,6 +265,8 @@ int main(int argc, char *argv[])
             }
             if (query_stack.empty()) break;
         }
+        //ansfile << "Query : " << query_cnt << endl;
+        query_cnt++;
         int strfound = 0;
         for (int i = 0; i < Essay_vector.size(); i++) {
             if (found[i]) {
@@ -276,9 +279,9 @@ int main(int argc, char *argv[])
     ansfile.close();
     fi.close();
 
-    clock_t end = clock();
-    float seconds = (float)(end - start) / CLOCKS_PER_SEC;
-    cout << seconds << " seconds\n";
+    clock_t s_end = clock();
+    seconds = (float)(s_end - end) / CLOCKS_PER_SEC;
+    std::cout << "search : " << seconds << " seconds\n";
 
     return 0;
 }

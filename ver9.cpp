@@ -1,7 +1,6 @@
 #define FILE_EXTENSION ".txt"
 #include<fstream>
 #include<string>
-#include<cstring>
 #include<vector>
 #include<iostream>
 #include <sys/stat.h>
@@ -10,51 +9,15 @@
 
 using namespace std;
 
-// ver3.cpp
-// using ternary search tree to implement essay search engine
+// ver7.cpp
+// using trie plus ternary search tree to implement essay search engine
 // using stack to store query
-// 1 / 15 pm 3:52 start
-// fail to complete with unknown reasons...
+// 1 / 17 am 12:12 finish
+// 0.2 second faster than ver1
 
-// finish 1 / 16 pm 1 : 39
-// little faster than ver1 because without array allocating time!
+const int level_t = 5;  // 5 :  11 GB in 10w data
 
-// Utility Func
-
-// string parser : output vector of strings (words) after parsing
-vector<string> word_parse(vector<string> tmp_string){
-	vector<string> parse_string;
-	for(auto& word : tmp_string){
-		string new_str;
-    	for(auto &ch : word){
-			if(isalpha(ch))
-				new_str.push_back(ch);
-		}
-		parse_string.emplace_back(new_str);
-	}
-	return parse_string;
-}
-
-vector<string> split(const string& str, const string& delim) {
-	vector<string> res;
-	if("" == str) return res;
-	//先將要切割的字串從string型別轉換為char*型別
-	char * strs = new char[str.length() + 1] ; //不要忘了
-	strcpy(strs, str.c_str());
-
-	char * d = new char[delim.length() + 1];
-	strcpy(d, delim.c_str());
-
-	char *p = strtok(strs, d);
-	while(p) {
-		string s = p; //分割得到的字串轉換為string型別
-		res.push_back(s); //存入結果陣列
-		p = strtok(NULL, d);
-	}
-
-	return res;
-}
-
+// ternaryNode class
 class ternaryNode{
     public:
         ternaryNode *left, *eq, *right;
@@ -113,39 +76,6 @@ void ternaryNode::insert(string str, int index){
         if (!this->left) this->left = new ternaryNode;
         this->left->insert(str, index);
     }
-    /*
-    if (str.length() == 0) return;
-    if (index > str.length() - 1) return; 
-
-    // lowercase 
-    char ch = str[index];
-    if (ch < 'a') ch = ch - 'A' + 'a';
-
-    if (this->c == ' ') {
-        //this->empty = 0;
-        this->c = ch;
-        if (index == str.length() - 1) ifend = true;
-        else {
-            if (!this->eq) this->eq = new ternaryNode;
-            this->eq->insert(str, index + 1);
-        }
-    }
-    else if (this->c == ch) {
-        if (index == str.length() - 1) ifend = true;
-        else {
-            if (!this->eq)  this->eq = new ternaryNode;
-            this->eq->insert(str, index + 1);
-        }
-    }
-    else if (this->c < ch) {
-        if (!this->right)  this->right = new ternaryNode;
-        this->right->insert(str, index);
-    }
-    else if (this->c > ch) {
-        if (!this->left) this->left = new ternaryNode;
-        this->left->insert(str, index);
-    }
-    */
 };
 
 bool ternaryNode::exact_search(string str) {
@@ -277,14 +207,196 @@ void Inverse_insert(ternaryNode **root, string &str, int index) {
     }
 }
 
+// trie Node class
+const int ALPHABATSIZE = 26;
+
+class Node{
+    public:
+        Node **children;
+        bool ifend;
+        ternaryNode *terNode;
+        int level;
+        Node(){
+            children = new Node*[ALPHABATSIZE];
+            for (int i = 0 ; i < ALPHABATSIZE; i++) {
+                children[i] = NULL;
+            }
+            ifend = false;
+            level = -1;
+            terNode = NULL;
+        };
+        ~Node(){
+            //this->clear();
+        };
+        void insert(string str){
+            Node *tmp = this;
+            int temp_level = 0;
+            int ifter = 0;
+            for (auto c : str) {
+                int index = c - 'a';
+                if (index < 0) index = c - 'A';
+                if (temp_level < level_t) {
+                    if (!tmp->children[index]) {
+                        tmp->children[index] = new Node;
+                        tmp->children[index]->level = temp_level;
+                    }
+                    temp_level++;
+                    tmp = tmp->children[index];
+                }
+                else {
+                    ifter = 1;
+                    if (!tmp->terNode) tmp->terNode = new ternaryNode;
+                    tmp->terNode->insert(str, level_t);
+                    break;
+                }
+            }
+            if (!ifter) tmp->ifend = true;
+        };
+        void inverse_insert(string str) {
+            Node *tmp = this;
+            int temp_level = 0;
+            int ifter = 0;
+            for (auto it = str.rbegin(); it != str.rend(); it++) {
+                int index = *it - 'a';
+                if (index < 0) index = *it - 'A';
+                if (temp_level < level_t) {
+                    if (!tmp->children[index]) {
+                        tmp->children[index] = new Node;
+                        tmp->children[index]->level = temp_level;
+                    }
+                    tmp = tmp->children[index];
+                    temp_level++;
+                }
+                else {
+                    ifter = 1;
+                    if (!tmp->terNode) tmp->terNode = new ternaryNode;
+                    tmp->terNode->inverse_insert(str, str.length() - 1 - level_t);
+                    break;
+                }
+            }
+            if (!ifter) tmp->ifend = true;
+        };
+        bool exact_search(string str){
+            Node *tmp = this;
+            int temp_level = 0;
+            for (auto c : str) {
+                int index = c - 'a';
+                if (index < 0) index = c - 'A';
+                if (temp_level < level_t) {
+                    if (!tmp->children[index]) {
+                        return false;
+                    }
+                    tmp = tmp->children[index];
+                    temp_level++;
+                }
+                else break;
+            }
+            if (temp_level < level_t){
+                return tmp->ifend;
+            } 
+            else {
+                string s = str;
+                s.assign(s, level_t, s.length() - level_t);
+                if (s.length() == 0) return tmp->ifend;
+                else return tmp->terNode->exact_search(s);
+            }
+        };
+        bool suffix_search(string str){
+            Node *tmp = this;
+            int temp_level = 0;
+            for (auto it = str.rbegin(); it != str.rend(); it++) {
+                int index = *it - 'a';
+                if (index < 0) index = *it - 'A';
+                if (temp_level < level_t) {
+                    if (!tmp->children[index]) {
+                        return false;
+                    }
+                    tmp = tmp->children[index];
+                    temp_level++;
+                }
+                else break;
+            }
+            if (temp_level < level_t){
+                return true;
+            } 
+            else {
+                string s;
+                s.assign(str, 0, str.length() - level_t);
+                if (s.length() == 0) return true;
+                else return tmp->terNode->suffix_search(s);
+            }
+        };
+        bool prefix_search(string str){
+            Node *tmp = this;
+            int temp_level = 0;
+            for (auto c : str) {
+                int index = c - 'a';
+                if (index < 0) index = c - 'A';
+                if (temp_level < level_t) {
+                    if (!tmp->children[index]) {
+                        return false;
+                    }
+                    tmp = tmp->children[index];  
+                    temp_level++;
+                }
+                else break;
+            }
+            if (temp_level < level_t){
+                return true;
+            } 
+            else {
+                string s = str;
+                s.assign(s, level_t, s.length() - level_t);
+                if (s.length() == 0) return true;
+                else return tmp->terNode->prefix_search(s);
+            }
+        };
+};
+
+// Utility Func
+
+// string parser : output vector of strings (words) after parsing
+vector<string> word_parse(vector<string> tmp_string){
+	vector<string> parse_string;
+	for(auto& word : tmp_string){
+		string new_str;
+    	for(auto &ch : word){
+			if(isalpha(ch))
+				new_str.push_back(ch);
+		}
+		parse_string.emplace_back(new_str);
+	}
+	return parse_string;
+}
+
+vector<string> split(const string& str, const string& delim) {
+	vector<string> res;
+	if("" == str) return res;
+	//先將要切割的字串從string型別轉換為char*型別
+	char * strs = new char[str.length() + 1] ; //不要忘了
+	strcpy(strs, str.c_str());
+
+	char * d = new char[delim.length() + 1];
+	strcpy(d, delim.c_str());
+
+	char *p = strtok(strs, d);
+	while(p) {
+		string s = p; //分割得到的字串轉換為string型別
+		res.push_back(s); //存入結果陣列
+		p = strtok(NULL, d);
+	}
+
+	return res;
+}
+
 class essay{
     public:
         string title;
-        ternaryNode *root;
-        ternaryNode *inverse_root;
+        Node *root;
+        Node *inverse_root;
         essay(){
-            root = new ternaryNode;
-            inverse_root = new ternaryNode;
+            root = new Node;
+            inverse_root = new Node;
         };
         bool search(string str) {
             if (str[0] == '"' && str[str.length() - 1] == '"') {
@@ -330,13 +442,11 @@ int main(int argc, char *argv[])
         struct stat buf;
         if (stat(data_path.c_str(), &buf) == -1) break;
         file_index++;
-
         if (file_index == 1000) {
-            file_index = 0;
             count++;
             if (count == 50) break;
+            file_index = 0;
         }
-
         essay e;
         // get title name
         fi.open(data_path, ios::in);
@@ -347,12 +457,8 @@ int main(int argc, char *argv[])
         tmp_string = split(title_name, " ");
         vector<string> title = word_parse(tmp_string);
         for (auto word : title) {
-            //cout << word << endl;
-            e.root->insert(word, 0);
-            e.inverse_root->inverse_insert(word, word.length() - 1);
-            //Inverse_insert(&(e.inverse_root), word, word.length() - 1);
-            //reverse(word.begin(), word.end());
-            //e.inverse_root->insert(word, 0);
+            e.root->insert(word);
+            e.inverse_root->inverse_insert(word);
         }
 
         // get content line by line
@@ -361,11 +467,8 @@ int main(int argc, char *argv[])
 		    vector<string> content = word_parse(tmp_string);
 		    for(auto &word : content){
                 //cout << word << endl;
-                e.root->insert(word, 0);
-                e.inverse_root->inverse_insert(word, word.length() - 1);
-                //Inverse_insert(&(e.inverse_root), word, word.length() - 1);
-                //reverse(word.begin(), word.end());
-                //e.inverse_root->insert(word, 0);
+                e.root->insert(word);
+                e.inverse_root->inverse_insert(word);
 		    }
 	    }
         Essay_vector.push_back(e);
@@ -434,8 +537,8 @@ int main(int argc, char *argv[])
     ansfile.close();
     fi.close();
 
-    clock_t search_end = clock();
-    seconds = (float)(search_end - end) / CLOCKS_PER_SEC;
+    clock_t s_end = clock();
+    seconds = (float)(s_end - end) / CLOCKS_PER_SEC;
     cout << "search : " << seconds << " seconds\n";
 
     return 0;
