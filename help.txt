@@ -1,0 +1,5 @@
+g++ -std=c++17 -o essay-search.exe ./*.cpp -Istdc++fs
+
+check file
+./check.exe query_more_1000_output.txt test-output.txt
+
