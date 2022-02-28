@@ -21,7 +21,9 @@ the example query will be
 1. “graph” / *composition*
 
 Essay set A: Find essays that have exactly the word [graph]
+
 Essay set B: Find essays that have words with suffix [composition]
+
 A, B set with OR operator -> answer = union of sets A and B
 
 2. graph + decomposition / reflection
