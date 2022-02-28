@@ -17,20 +17,20 @@ using trie and ternary search tree to build dictionary trees.Give it essays and 
 ### the example query
 1. “graph” / *composition*
 
-Essay set A: Find essays that have exactly the word [graph]
+  Essay set A: Find essays that have exactly the word [graph]
 
-Essay set B: Find essays that have words with suffix [composition]
+  Essay set B: Find essays that have words with suffix [composition]
 
-A, B set with OR operator -> answer = union of sets A and B
+  A, B set with OR operator -> answer = union of sets A and B
 
 2. graph + decomposition / reflection
 
-Essay set A: Find essays that have words with prefix [graph]
+  Essay set A: Find essays that have words with prefix [graph]
 
-Essay set B: Find essays that have words with prefix [decomposition]
+  Essay set B: Find essays that have words with prefix [decomposition]
 
-Essay set C: Find essays that have words with prefix [reflection]
+  Essay set C: Find essays that have words with prefix [reflection]
 
-We know that A + B / C = (A + B) / C
-Essay set D = intersection of sets A and B
-Answer = union of sets D and C
+  We know that A + B / C = (A + B) / C
+  Essay set D = intersection of sets A and B
+  Answer = union of sets D and C
