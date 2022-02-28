@@ -1,11 +1,7 @@
 # DS-essay-search-engine
 2021 aultumn
 
-## this is a essay search engine!!!
-## using trie and ternary search tree to build dictionary trees
-
-
-## give it essays and some search words, it will return those essay with the given words
+## this is a essay search engine!!! using trie and ternary search tree to build dictionary trees give it essays and some search words, it will return those essay with the given words
 
 ### bellow are types of search can be choosed!!
 1. exact search :"search-word"
